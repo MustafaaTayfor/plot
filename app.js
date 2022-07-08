@@ -8,7 +8,7 @@ var bodyParser = require('body-parser');
 const app  = express();
 
 
-const PORT = 4000;
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -31,10 +31,12 @@ app.post('/login', async(req , res )=>{
 });
 
 
+
+
   mongoose.connect("mongodb+srv://sawSy:9OP4J1pQp1It9Dh1@plotgameapp.sbbcz.mongodb.net/plot_api?retryWrites=true&w=majority")
   .then(result => {
       console.log("mongosedb is connection");
-
+      var PORT =process.env.PORT || 8080;
       
 const server = app.listen(PORT , ()=>{
     console.log('Server is Started' , PORT);
