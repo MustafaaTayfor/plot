@@ -34,14 +34,4 @@ module.exports = {
         })
     },
 
-    loginUser : async(req , res )=>{
-        console.log("login req");
-        const email = req.body.email;
-        const password = req.body.password;
-
-    }
-
-
-
-
 }
