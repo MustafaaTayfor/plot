@@ -66,6 +66,11 @@ app.post('/login', async(req , res )=>{
                  console.log('sended data from ' , data['sentById']);
                  io.to(data['to']).emit('message-receive', data);
              });
+             socket.on('publicMessage', (data)=>{
+                console.log('sended data from ' , data['from']);
+                io.emit('publicMessage-re', data);
+            });
+    
      
              socket.on('getClients', (data)=>{
                  var clients = findClientsSocket();
