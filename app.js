@@ -55,10 +55,7 @@ app.post('/login', async(req , res )=>{
             
              socket.on('disconnect',()=>{
 
-                 var myIndex = arr.indexOf(socket.id);
-                 if (myIndex !== -1) {
-                     arr.splice(myIndex, 1);
-                 }
+                 
                  console.log('Desconnected' , socket.id , PORT);
              });
      
@@ -67,7 +64,6 @@ app.post('/login', async(req , res )=>{
                  io.to(data['to']).emit('message-receive', data);
              });
              socket.on('publicMessage', (data)=>{
-                console.log('sended data from ' , data['from']);
                 io.emit('publicMessage-re', data);
             });
     
