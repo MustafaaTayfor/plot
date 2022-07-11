@@ -48,44 +48,48 @@ app.post('/login', async(req , res )=>{
   .then(result => {
         console.log("mongosedb is connection");
 
-        io.on('connection',(socket)=>{
-            // var clients = io.sockets.clients();
-            console.log('Connected Successfully for ', socket.id);
-            io.to(socket.id).emit('Connected-Successfully', '1');
-            
-             socket.on('disconnect',()=>{
-
-                 
-                 console.log('Desconnected' , socket.id , PORT);
-             });
-     
-             socket.on('message', (data)=>{
-                 console.log('sended data from ' , data['sentById']);
-                 io.to(data['to']).emit('message-receive', data);
-             });
-             socket.on('publicMessage', (data)=>{
-                io.emit('publicMessage-re', data);
-            });
-    
-     
-             socket.on('getClients', (data)=>{
-                 var clients = findClientsSocket();
-                 var arr = []; 
-                  clients.forEach((c)=>{
-                      //console.log(c.id);
-                      arr.push(c.id);
-                  });
-     
-                io.to(data['id']).emit('getClients-receive', arr);
-             });
-     
-     });
+        
 
 
   }).catch(err => {
         console.log( "hi this is my error : " ,err);
   });
   
+  io.on('connection',(socket)=>{
+    // var clients = io.sockets.clients();
+    console.log('Connected Successfully for ', socket.id);
+    io.to(socket.id).emit('Connected-Successfully', '1');
+    
+     socket.on('disconnect',()=>{
+        
+         console.log('Desconnected' , socket.id , PORT);
+     });
+
+     socket.on('message', (data)=>{
+         console.log('sended data from ' , data['sentById']);
+         io.to(data['to']).emit('message-receive', data);
+     });
+     socket.on('publicMessage', (data)=>{
+        console.log('sended data from ' , data['from'] , ' ' ,data['text'] );
+
+        io.emit('publicMessage-re', data);
+    });
+
+
+     socket.on('getClients', (data)=>{
+         var clients = findClientsSocket();
+         var arr = []; 
+          clients.forEach((c)=>{
+              console.log(c.id);
+              arr.push(c.id);
+          });
+
+        io.emit('getClients-receive', arr);
+     });
+
+});
+
+
 
   function findClientsSocket(roomId, namespace) {
       var res = []
