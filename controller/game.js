@@ -6,21 +6,20 @@ allCards = [];
 module.exports = {
     players : ()=> {return players.length},
     handle: (socket)=>{
-        console.log('players in game ' , players.length);
+        socket.join('PlotGame');
         let hasGameStarted = ()=>{
             return players.find(player => player.active == true)
         }
         if(!hasGameStarted()){
             socket.on('new player', (data )=>{
                 if(players.length < 4){
-                    console.log('player ', data['name'], ' is joined')
-                    
                     players.push(Player.newPlayer(socket.id ,data['id'] , data['name'], data['email'], players.length ))
+                    socket.to('PlotGame').emit('join player' ,{'data': data , 'players' : players  } )
+                    console.log('player ', data['name'], ' is joined , number is ' , players.length)
                     //socket.server.emit('update game' , players)
-                    socket.server.emit('join player' ,{'data': data , 'players' : players  } )
                 }else{
-                    console.log('game is full ' , players.length);
                     socket.emit('game is full ' , data['name'])
+                    console.log('game is full ' , players.length);
                 }
             })   
         }
@@ -30,7 +29,7 @@ module.exports = {
 
             if(current != -1 )players[current].active = false
                 players[next].active = true
-                socket.server.emit('update game' , players)
+                socket.to('PlotGame').emit('update game' , players)
         })
 
     }
