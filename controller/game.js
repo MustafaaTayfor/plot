@@ -13,7 +13,10 @@ module.exports = {
         if(!hasGameStarted()){
             socket.on('new player', (data )=>{
                 if(players.length < 4){
-                    players.push(Player.newPlayer(socket.id ,data['id'] , data['name'], data['email'], players.length ))
+                    let nPlayer = Player.newPlayer(socket.id ,data['id'] , data['name'], data['email'], players.length );
+                    if(!players.find((P)=> nPlayer.id == P.id )){
+                        players.push(nPlayer)
+                    }
                     socket.to('PlotGame').emit('join player' ,{'data': data , 'players' : players  } )
                     console.log('player ', data['name'], ' is joined , number is ' , players.length)
                     //socket.server.emit('update game' , players)
