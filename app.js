@@ -86,7 +86,7 @@ app.post('/login', async(req , res )=>{
 
      socket.on('create game', (data)=>{
             game.handle(socket);
-            socket.emit('create-game-re',data);
+            socket.to('PlotGame').emit('create-game-re',data);
             console.log('game rest by ' , data['name'] , ' ', socket.id);
     });
 
