@@ -2,8 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const USERS = require ('./models/users');
 const usersRoute = require('./route/users');
+let Player = require('./controller/player');
 
 var bodyParser = require('body-parser');
+const game = require('./controller/game');
 
 const app  = express();
 var PORT =process.env.PORT || 8080;
@@ -48,11 +50,8 @@ app.post('/login', async(req , res )=>{
   .then(result => {
         console.log("mongosedb is connection");
 
-        
-
-
   }).catch(err => {
-        console.log( "hi this is my error : " ,err);
+        console.log( "error in mongosedb connection : " ,err);
   });
   
   io.on('connection',(socket)=>{
@@ -61,7 +60,6 @@ app.post('/login', async(req , res )=>{
     io.to(socket.id).emit('Connected-Successfully', '1');
     
      socket.on('disconnect',()=>{
-        
          console.log('Desconnected' , socket.id , PORT);
      });
 
@@ -75,7 +73,6 @@ app.post('/login', async(req , res )=>{
         io.emit('publicMessage-re', data);
     });
 
-
      socket.on('getClients', (data)=>{
          var clients = findClientsSocket();
          var arr = []; 
@@ -86,6 +83,15 @@ app.post('/login', async(req , res )=>{
 
         io.emit('getClients-receive', arr);
      });
+
+     socket.on('create game', (data)=>{
+            game.handle(socket);
+            io.emit('create-game-re',data);
+            console.log('game rest by ' , data['name'] , ' ', socket.id);
+    });
+
+
+
 
 });
 
