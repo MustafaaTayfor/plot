@@ -6,6 +6,7 @@ module.exports = {
             index:index,
             email: email,
             name : userName,
+            cards:[],
             score : 0,
             active : false
         }

@@ -6,6 +6,7 @@ let Player = require('./controller/player');
 
 var bodyParser = require('body-parser');
 const game = require('./controller/game');
+const { players } = require('./controller/game');
 
 const app  = express();
 var PORT =process.env.PORT || 8080;
@@ -83,11 +84,19 @@ app.post('/login', async(req , res )=>{
 
         io.emit('getClients-receive', arr);
      });
+     var created = false;
 
      socket.on('create game', (data)=>{
+        if(created == false){
             game.handle(socket);
-            socket.to('PlotGame').emit('create-game-re',data);
-            console.log('game rest by ' , data['name'] , ' ', socket.id);
+            created = true;
+            console.log('game rest by ' , data['user']['name'] , ' ', socket.id);
+        }else{
+            console.log('join to old game',game.players());
+        }
+
+        socket.join('PlotGame');
+        io.to('PlotGame').emit('create-game-re');
     });
 
 
