@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const {getMessage , postMessage} = require('../logic/message');
+const {allMessages , postMessage} = require('../logic/message');
 
-router.get('/' ,getMessage );
+router.get('/' ,allMessages );
 router.post('/',postMessage );
 
 

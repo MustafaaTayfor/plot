@@ -2,6 +2,7 @@ const player = require('../controller/player');
 let Player = require('../controller/player');
 const cards = require('../models/cards');
 let Card = require('../models/cards');
+
 players = [null , null , null , null];
 allCards = [
     Card.newCards( 'seven', 'spades'),
@@ -66,6 +67,7 @@ function shuffle(array) {
 
 
 
+
 module.exports = {
     players:()=>{
         return players
@@ -86,7 +88,6 @@ module.exports = {
                     for(var i = 0;i<5 && allCards.length>0;i++){
                         players[p].cards.push(allCards[0]);
                         allCards.splice(0 ,1);
-                        console.log(allCards[0])
                     } 
                 }
             }
@@ -111,9 +112,7 @@ module.exports = {
                     let nPlayer = Player.newPlayer(socket.id ,data['user']['id'] , data['user']['name'], data['user']['email'],  data['index'] );
                     players[data['index']] = nPlayer;
                     socket.server.to('PlotGame').emit('join player re' ,{'data': data , 'players' : players  } )
-                    if(playersNum() == 4){
-                        sortCards();
-                    }
+                    
                     console.log('player ', data['user']['name'] , ' is joined ', socket.id)
                     //socket.server.emit('update game' , players)
                 }else{
@@ -144,6 +143,9 @@ module.exports = {
         })
 
         socket.on('start game', (data )=>{
+            if(playersNum() == 4){
+                sortCards();
+            }
             socket.server.to('PlotGame').emit('start game re' , { 'playerKingdom':playerKingdom , 'rolePlayer' : rolePlayer })
             console.log('game started....')
         })

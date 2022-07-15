@@ -2,8 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const USERS = require ('./models/users');
 const usersRoute = require('./route/users');
+const messageRoute = require('./route/messages');
 let Player = require('./controller/player');
-
+const MESSAGE = require ('./models/message');
 var bodyParser = require('body-parser');
 const game = require('./controller/game');
 const { players } = require('./controller/game');
@@ -21,6 +22,7 @@ const io =  require('socket.io')(server);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/users', usersRoute);
+app.use('/publicMessages', messageRoute);
 
 app.post('/login', async(req , res )=>{
     console.log("login req");
@@ -39,12 +41,16 @@ app.post('/login', async(req , res )=>{
             email: user.email,
             password : user.password,
             })
-        
-
     }
-
-    
 });
+
+
+
+
+
+
+
+
 
 
   mongoose.connect("mongodb+srv://sawSy:9OP4J1pQp1It9Dh1@plotgameapp.sbbcz.mongodb.net/plot_api?retryWrites=true&w=majority")
@@ -68,9 +74,17 @@ app.post('/login', async(req , res )=>{
          console.log('sended data from ' , data['sentById']);
          io.to(data['to']).emit('message-receive', data);
      });
-     socket.on('publicMessage', (data)=>{
+     socket.on('publicMessage', async(data)=>{
         console.log('sended data from ' , data['from'] , ' ' ,data['text'] );
-
+        const message = await new MESSAGE({
+            text : data['text'],
+            date : data['date'],
+            from:  data['from'],
+            email:  data['email'],
+            userId:  mongoose.Types.ObjectId(data['userId']),
+            type :  data['type'],
+            voicePath :  data['voicePath'],
+            }).save()
         io.emit('publicMessage-re', data);
     });
 
