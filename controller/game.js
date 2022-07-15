@@ -4,44 +4,47 @@ const cards = require('../models/cards');
 let Card = require('../models/cards');
 players = [null , null , null , null];
 allCards = [
-    Card.newCards({name : 'seven',  type : 'spades'}),
-    Card.newCards({name : 'eight',  type : 'spades'}),
-    Card.newCards({name : 'nine',  type : 'spades'}),
-    Card.newCards({name : 'ten',  type : 'spades'}),
-    Card.newCards({name : 'jack',  type : 'spades'}),
-    Card.newCards({name : 'queen',  type : 'spades'}),
-    Card.newCards({name : 'king',  type : 'spades'}),
-    Card.newCards({name : 'one',  type : 'spades'}),
+    Card.newCards( 'seven', 'spades'),
+    Card.newCards('eight',  'spades'),
+    Card.newCards( 'nine',  'spades'),
+    Card.newCards( 'ten',  'spades'),
+    Card.newCards( 'jack',  'spades'),
+    Card.newCards( 'queen',  'spades'),
+    Card.newCards( 'king',  'spades'),
+    Card.newCards( 'one',  'spades'),
 
-    Card.newCards({name : 'seven', type : 'hearts'}),
-    Card.newCards({name : 'eight', type : 'hearts'}),
-    Card.newCards({name : 'nine', type : 'hearts'}),
-    Card.newCards({name : 'ten', type : 'hearts'}),
-    Card.newCards({name : 'jack', type : 'hearts'}),
-    Card.newCards({name : 'queen', type : 'hearts'}),
-    Card.newCards({name : 'king', type : 'hearts'}),
-    Card.newCards({name : 'one', type : 'hearts'}),
+    Card.newCards( 'seven', 'hearts'),
+    Card.newCards( 'eight', 'hearts'),
+    Card.newCards( 'nine', 'hearts'),
+    Card.newCards( 'ten', 'hearts'),
+    Card.newCards( 'jack', 'hearts'),
+    Card.newCards( 'queen', 'hearts'),
+    Card.newCards( 'king', 'hearts'),
+    Card.newCards( 'one', 'hearts'),
 
-    Card.newCards({name : 'seven', type : 'clubs'}),
-    Card.newCards({name : 'eight', type : 'clubs'}),
-    Card.newCards({name : 'nine', type : 'clubs'}),
-    Card.newCards({name : 'ten', type : 'clubs'}),
-    Card.newCards({name : 'jack', type : 'clubs'}),
-    Card.newCards({name : 'queen', type : 'clubs'}),
-    Card.newCards({name : 'king', type : 'clubs'}),
-    Card.newCards({name : 'one', type : 'clubs'}),
+    Card.newCards( 'seven', 'clubs'),
+    Card.newCards( 'eight', 'clubs'),
+    Card.newCards( 'nine', 'clubs'),
+    Card.newCards( 'ten', 'clubs'),
+    Card.newCards( 'jack', 'clubs'),
+    Card.newCards( 'queen', 'clubs'),
+    Card.newCards( 'king', 'clubs'),
+    Card.newCards( 'one', 'clubs'),
 
-    Card.newCards({name : 'seven', type : 'diamonds'}),
-    Card.newCards({name : 'eight', type : 'diamonds'}),
-    Card.newCards({name : 'nine', type : 'diamonds'}),
-    Card.newCards({name : 'ten', type : 'diamonds'}),
-    Card.newCards({name : 'jack', type : 'diamonds'}),
-    Card.newCards({name : 'queen', type : 'diamonds'}),
-    Card.newCards({name : 'king', type : 'diamonds'}),
-    Card.newCards({name : 'one', type : 'diamonds'}),
+    Card.newCards( 'seven', 'diamonds'),
+    Card.newCards( 'eight', 'diamonds'),
+    Card.newCards( 'nine', 'diamonds'),
+    Card.newCards( 'ten', 'diamonds'),
+    Card.newCards( 'jack', 'diamonds'),
+    Card.newCards( 'queen', 'diamonds'),
+    Card.newCards( 'king', 'diamonds'),
+    Card.newCards( 'one', 'diamonds'),
 ];
 
 let buyersCard ;
+
+let rolePlayer =1;
+let playerKingdom =0;
 
 function shuffle(array) {
     let currentIndex = array.length,  randomIndex;
@@ -75,17 +78,19 @@ module.exports = {
         let sortCards = ()=>{
             shuffle(allCards);
             buyersCard = allCards[0];
+            
             allCards.splice(0 ,1);
 
-            for(var p =0 ;p < players.length;p++){
+            for(var p =0 ;p < 4;p++){
                 if(players[p] != null){
                     for(var i = 0;i<5 && allCards.length>0;i++){
                         players[p].cards.push(allCards[0]);
                         allCards.splice(0 ,1);
+                        console.log(allCards[0])
                     } 
                 }
             }
-            socket.server.to('PlotGame').emit('get players re' , players)
+            socket.server.to('PlotGame').emit('get players re' , { 'players':players , 'buyersCard' : buyersCard })
         }
 
         
@@ -134,9 +139,31 @@ module.exports = {
         })
 
         socket.on('get players', (data )=>{
-                socket.server.to('PlotGame').emit('get players re' , players)
+                socket.server.to('PlotGame').emit('get players re' , { 'players':players , 'buyersCard' : buyersCard })
                 console.log('get players emit')
         })
+
+        socket.on('start game', (data )=>{
+            socket.server.to('PlotGame').emit('start game re' , { 'playerKingdom':playerKingdom , 'rolePlayer' : rolePlayer })
+            console.log('game started....')
+        })
+
+        socket.on('on buy', (data )=>{
+            rolePlayer ++;
+            if(rolePlayer>=4){
+                playerKingdom++;
+                rolePlayer =0;
+                if(playerKingdom >=4){
+                    playerKingdom = 0;
+                }
+            }
+        console.log('role :' , rolePlayer);
+            socket.server.to('PlotGame').emit('start game re' , { 'playerKingdom':playerKingdom , 'rolePlayer' : rolePlayer })
+            //console.log('player name purchase : ' ,data['player']['name'] , ' purchase ' , data['player']['purchase'] , ' index : ' ,data['player']['index'] )
+        })
+    
+
+
 
         socket.on('pass turn' , ()=>{
             let current = players.findIndex(palyer => player.active == true ),
