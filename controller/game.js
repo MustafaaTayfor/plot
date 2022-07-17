@@ -3,109 +3,195 @@ let Player = require('../controller/player');
 const cards = require('../models/cards');
 let Card = require('../models/cards');
 
+ const name_card = { one: "one" , two : "two" , three : "three", four : "four", five : "five", six : "six", seven : "seven", eight:"eight", nine :"nine" , ten:"ten" ,king :"king", queen:"queen"  , jack : "jack"}
+ const type_card = { diamonds:"diamonds" , spades:"spades", hearts : "hearts" ,  clubs : "clubs"}
+ const type_game = { san:"san" , pass :"pass" , hakam :"hakam" , ashkel :"ashkel" , wla:"wla" , hakam2 : "hakam2", double : "double" , before :"before" }
+
+
 
 class GamePlot{
     
-
-constructor (IdCreator){
-    this.players = [null , null , null , null];
-    this.buyersCard ;
+constructor (creatorPlayer){
+    
+    this.buyersCard = null;
+    this.buyerType = null;
+    this.gameStarted = false;
+    this.creatorPlayer = creatorPlayer;
+    this.players = [creatorPlayer , null , null , null];
     this.rolePlayer =1;
     this.playerKingdom =0;
-    this.gameName = 'GamePlot' + this.IdCreator ;
-        console.log('new Game ' , this.gameName);
-}
 
-    allCards = [
-        Card.newCards( 'seven', 'spades'),
-        Card.newCards('eight',  'spades'),
-        Card.newCards( 'nine',  'spades'),
-        Card.newCards( 'ten',  'spades'),
-        Card.newCards( 'jack',  'spades'),
-        Card.newCards( 'queen',  'spades'),
-        Card.newCards( 'king',  'spades'),
-        Card.newCards( 'one',  'spades'),
-    
-        Card.newCards( 'seven', 'hearts'),
-        Card.newCards( 'eight', 'hearts'),
-        Card.newCards( 'nine', 'hearts'),
-        Card.newCards( 'ten', 'hearts'),
-        Card.newCards( 'jack', 'hearts'),
-        Card.newCards( 'queen', 'hearts'),
-        Card.newCards( 'king', 'hearts'),
-        Card.newCards( 'one', 'hearts'),
-    
-        Card.newCards( 'seven', 'clubs'),
-        Card.newCards( 'eight', 'clubs'),
-        Card.newCards( 'nine', 'clubs'),
-        Card.newCards( 'ten', 'clubs'),
-        Card.newCards( 'jack', 'clubs'),
-        Card.newCards( 'queen', 'clubs'),
-        Card.newCards( 'king', 'clubs'),
-        Card.newCards( 'one', 'clubs'),
-    
-        Card.newCards( 'seven', 'diamonds'),
-        Card.newCards( 'eight', 'diamonds'),
-        Card.newCards( 'nine', 'diamonds'),
-        Card.newCards( 'ten', 'diamonds'),
-        Card.newCards( 'jack', 'diamonds'),
-        Card.newCards( 'queen', 'diamonds'),
-        Card.newCards( 'king', 'diamonds'),
-        Card.newCards( 'one', 'diamonds'),
+
+    this.gameName = 'plot' + this.creatorPlayer.userId + Date(Date.now()).toString();
+    this.gameIndex;
+
+    this.allCards = [
+        Card.newCards(name_card.seven, type_card.spades),
+        Card.newCards(name_card.eight, type_card.spades),
+        Card.newCards(name_card.nine, type_card.spades),
+        Card.newCards(name_card.ten, type_card.spades),
+        Card.newCards(name_card.jack, type_card.spades),
+        Card.newCards(name_card.queen, type_card.spades),
+        Card.newCards(name_card.king, type_card.spades),
+        Card.newCards(name_card.one, type_card.spades),
+
+        Card.newCards(name_card.seven, type_card.hearts),
+        Card.newCards(name_card.eight, type_card.hearts),
+        Card.newCards(name_card.nine, type_card.hearts),
+        Card.newCards(name_card.ten, type_card.hearts),
+        Card.newCards(name_card.jack, type_card.hearts),
+        Card.newCards(name_card.queen, type_card.hearts),
+        Card.newCards(name_card.king, type_card.hearts),
+        Card.newCards(name_card.one, type_card.hearts),
+
+        Card.newCards(name_card.seven, type_card.clubs),
+        Card.newCards(name_card.eight, type_card.clubs),
+        Card.newCards(name_card.nine, type_card.clubs),
+        Card.newCards(name_card.ten, type_card.clubs),
+        Card.newCards(name_card.jack, type_card.clubs),
+        Card.newCards(name_card.queen, type_card.clubs),
+        Card.newCards(name_card.king, type_card.clubs),
+        Card.newCards(name_card.one, type_card.clubs),
+
+        Card.newCards(name_card.seven, type_card.diamonds),
+        Card.newCards(name_card.eight, type_card.diamonds),
+        Card.newCards(name_card.nine, type_card.diamonds),
+        Card.newCards(name_card.ten, type_card.diamonds),
+        Card.newCards(name_card.jack, type_card.diamonds),
+        Card.newCards(name_card.queen, type_card.diamonds),
+        Card.newCards(name_card.king, type_card.diamonds),
+        Card.newCards(name_card.one, type_card.diamonds),
     ];
 
-  gameRest() {
-       this.players = [null , null , null , null];
-       this.allCards = [
-                Card.newCards( 'seven', 'spades'),
-                Card.newCards('eight',  'spades'),
-                Card.newCards( 'nine',  'spades'),
-                Card.newCards( 'ten',  'spades'),
-                Card.newCards( 'jack',  'spades'),
-                Card.newCards( 'queen',  'spades'),
-                Card.newCards( 'king',  'spades'),
-                Card.newCards( 'one',  'spades'),
+    console.log('new Game ' , this.gameName , ' by ' , this.creatorPlayer.userId );
+}
 
-                Card.newCards( 'seven', 'hearts'),
-                Card.newCards( 'eight', 'hearts'),
-                Card.newCards( 'nine', 'hearts'),
-                Card.newCards( 'ten', 'hearts'),
-                Card.newCards( 'jack', 'hearts'),
-                Card.newCards( 'queen', 'hearts'),
-                Card.newCards( 'king', 'hearts'),
-                Card.newCards( 'one', 'hearts'),
-
-                Card.newCards( 'seven', 'clubs'),
-                Card.newCards( 'eight', 'clubs'),
-                Card.newCards( 'nine', 'clubs'),
-                Card.newCards( 'ten', 'clubs'),
-                Card.newCards( 'jack', 'clubs'),
-                Card.newCards( 'queen', 'clubs'),
-                Card.newCards( 'king', 'clubs'),
-                Card.newCards( 'one', 'clubs'),
-
-                Card.newCards( 'seven', 'diamonds'),
-                Card.newCards( 'eight', 'diamonds'),
-                Card.newCards( 'nine', 'diamonds'),
-                Card.newCards( 'ten', 'diamonds'),
-                Card.newCards( 'jack', 'diamonds'),
-                Card.newCards( 'queen', 'diamonds'),
-                Card.newCards( 'king', 'diamonds'),
-                Card.newCards( 'one', 'diamonds'),
-            ];
-            this.buyersCard  = null;
-            this.rolePlayer =1;
-            this.playerKingdom =0;
-            console.log('game is rest');
+toJSON(){
+    return {
+        'buyersCard':  this.buyersCard,
+        'buyerType' : this.buyerType,
+        'gameStarted': this.gameStarted,
+        'creatorPlayer':this.creatorPlayer,
+        'players': this.players,
+        'rolePlayer' : this.rolePlayer,
+        'playerKingdom':this.playerKingdom,
+        'gameName' : this.gameName,
+        'gameIndex' :this.gameIndex,
     }
 
+}
+
+
+playerIndex (p){
+    
+    return this.players.findIndex(palyer => { return palyer.id == p.id});
+}
+
+playersNum (){
+    var res =0;
+    for(var i =0 ;i < 4;i++){
+        if(this.players[i] != null){
+            res++;
+        }
+    }
+    return res
+}
+
+
+distributingCards(){
+    shuffle(this.allCards);
+
+    if(this.buyersCard == null){
+        this.buyersCard = this.allCards[0];          
+        this.allCards.splice(0 ,1);
+        
+        for(var j =0 ;j < 4;j++){
+            if(this.players[j] != null){
+                for(var i = 0;i<5 && this.allCards.length>0;i++){
+                    this.players[j].cards.push(this.allCards[0]);
+                    this.allCards.splice(0 ,1);
+                }
+            }
+        }
+
+    }else{
+        for(var i =0 ; i< 4 ; i++){
+
+            if(this.players[i] != null){
+                if(this.players[i].id == this.creatorPlayer.id){
+
+                    this.players[i].Cards.push(this.buyersCard);
+                    this.buyersCard = null;
+                    this.players[i].cards.push(this.allCards[0]);
+                    this.players[i].cards.push(this.allCards[1]);
+                    this.allCards.splice(0 ,2);
+                    
+                }else{
+                    for(var j = 0;j<3 && this.allCards.length>0;j++){
+                        this.players[i].cards.push(this.allCards[0]);
+                        this.allCards.splice(0 ,1);
+                    }
+                }
+            }
+
+        }
+
+        
+    }
+}
+
+
+gameRest() {
+    this.players = [null , null , null , null];
+    this.allCards = [
+        Card.newCards(name_card.seven, type_card.spades),
+        Card.newCards(name_card.eight, type_card.spades),
+        Card.newCards(name_card.nine, type_card.spades),
+        Card.newCards(name_card.ten, type_card.spades),
+        Card.newCards(name_card.jack, type_card.spades),
+        Card.newCards(name_card.queen, type_card.spades),
+        Card.newCards(name_card.king, type_card.spades),
+        Card.newCards(name_card.one, type_card.spades),
+
+        Card.newCards(name_card.seven, type_card.hearts),
+        Card.newCards(name_card.eight, type_card.hearts),
+        Card.newCards(name_card.nine, type_card.hearts),
+        Card.newCards(name_card.ten, type_card.hearts),
+        Card.newCards(name_card.jack, type_card.hearts),
+        Card.newCards(name_card.queen, type_card.hearts),
+        Card.newCards(name_card.king, type_card.hearts),
+        Card.newCards(name_card.one, type_card.hearts),
+
+        Card.newCards(name_card.seven, type_card.clubs),
+        Card.newCards(name_card.eight, type_card.clubs),
+        Card.newCards(name_card.nine, type_card.clubs),
+        Card.newCards(name_card.ten, type_card.clubs),
+        Card.newCards(name_card.jack, type_card.clubs),
+        Card.newCards(name_card.queen, type_card.clubs),
+        Card.newCards(name_card.king, type_card.clubs),
+        Card.newCards(name_card.one, type_card.clubs),
+
+        Card.newCards(name_card.seven, type_card.diamonds),
+        Card.newCards(name_card.eight, type_card.diamonds),
+        Card.newCards(name_card.nine, type_card.diamonds),
+        Card.newCards(name_card.ten, type_card.diamonds),
+        Card.newCards(name_card.jack, type_card.diamonds),
+        Card.newCards(name_card.queen, type_card.diamonds),
+        Card.newCards(name_card.king, type_card.diamonds),
+        Card.newCards(name_card.one, type_card.diamonds),
+    ];
+    this.buyersCard  = null;
+    this.rolePlayer =1;
+    this.playerKingdom =0;
+        console.log('game is rest');
+}
 
 
 }
-Games  = [
-    new GamePlot('test'),
 
-];
+
+
+Games  = [];
 
 
 function shuffle(array) {
@@ -124,124 +210,117 @@ function shuffle(array) {
     }
   
     return array;
-  }
+}
 
 
 
 module.exports = {
-    players:()=>{
-        return Games[0].players
+
+    // PC  = Player Creator
+    createGame: (socket, PC)=>{
+        myGame = new GamePlot(PC);
+        Games.push(myGame);
+        let indexGame = Games.findIndex(game => {return game.gameName == myGame.gameName});
+        Games[indexGame].gameIndex = indexGame;
+
+        socket.join(myGame.gameName);
+        socket.emit('create-game-re',myGame.toJSON());
     },
+
+    findEmptyGame:(socket)=>{
+       let emptyGameIndex = Games.findIndx(game => {return game.playersNum() <4});
+       if(emptyGameIndex != -1){
+           socket.emit('create-game-re',myGame[emptyGameIndex].toJSON());
+       }
+    },
+
+    
     handle: (socket)=>{
-        let hasGameStarted = ()=>{
-            return Games[0].players.find(player => ( player!= null && player.active == true))
-        }
 
-        let sortCards = ()=>{
-            shuffle(Games[0].allCards);
-            Games[0].buyersCard = Games[0].allCards[0];
-            
-            Games[0].allCards.splice(0 ,1);
-
-            for(var p =0 ;p < 4;p++){
-                if(Games[0].players[p] != null){
-                    for(var i = 0;i<5 && Games[0].allCards.length>0;i++){
-                        Games[0].players[p].cards.push(Games[0].allCards[0]);
-                        Games[0].allCards.splice(0 ,1);
-                    } 
+        socket.on('join player', (data )=>{
+            let indexGame = data['gameIndex'];
+            if(Games[indexGame].players[data['index']] == null || Games[indexGame].players[data['index']].email == data['user']['email']){
+                
+                let nPlayer = Player.newPlayer(socket.id ,data['user']['id'] , data['user']['name'], data['user']['email'],  data['index'] );
+                
+                //اذا اللاعب موجود بالفعل داخل اللعبة اخبر اللاعب مكان جلوسه وامنعه من الدخول
+                if(Games[indexGame].playerIndex(nPlayer) != -1 && false){
+                    socket.server.to(myGame.gameName).emit('You are already in the game' ,{'data': data , 'playersIndex' :Games[indexGame].playerIndex(nPlayer)});
+                    console.log('You are already in the game ', Games[indexGame].gameName , ' your index is ' , Games[indexGame].playerIndex(nPlayer));
+                    return;
                 }
+                
+                Games[indexGame].players[data['index']] = nPlayer;
+                socket.server.to(myGame.gameName).emit('join player re' ,{'data': data , 'players' : Games[indexGame].players  } )    
+                console.log('player ', data['user']['name'] , ' is joined ', socket.id)
+            }else{
+                socket.emit('game is full ' , data['user']['name'])
+                console.log('game is full ');
             }
-            socket.server.to('PlotGame').emit('get players re' , { 'players':Games[0].players , 'buyersCard' : Games[0].buyersCard })
-        }
-
+        })
         
-        let playersNum = ()=> {
-            var res =0;
-            for(var i =0 ;i < Games[0].players.length;i++){
-                if(Games[0].players[i] != null){
-                    res++;
-                }
-            }
-            return res
-        }
-
-
-        if(!hasGameStarted()){
-            socket.on('join player', (data )=>{
-                if(Games[0].players[data['index'] ] == null || Games[0].players[data['index']].email == data['user']['email']){
-                    let nPlayer = Player.newPlayer(socket.id ,data['user']['id'] , data['user']['name'], data['user']['email'],  data['index'] );
-                    Games[0].players[data['index']] = nPlayer;
-                    socket.server.to('PlotGame').emit('join player re' ,{'data': data , 'players' : Games[0].players  } )
-                    
-                    console.log('player ', data['user']['name'] , ' is joined ', socket.id)
-                    //socket.server.emit('update game' , players)
-                }else{
-                    socket.emit('game is full ' , data['user']['name'])
-                    console.log('game is full ');
-                }
-            })   
-        }
 
         socket.on('leave player', (data )=>{
-                
-            if(data['index']<4  && Games[0].players[data['index'] ] != null && Games[0].players[data['index']].email == data['user']['email']){
-                Games[0].players[data['index']] = null;
-                socket.server.to('PlotGame').emit('leave player re' ,{'data': data , 'players' : Games[0].players  } )
-                socket.leave('PlotGame');
-                if(playersNum() == 0){
-                    Games[0].gameRest();
+            let indexGame = data['gameIndex'];
+            if(data['index']<4  && Games[indexGame].players[data['index'] ] != null && Games[indexGame].players[data['index']].email == data['user']['email']){
+                Games[indexGame].players[data['index']] = null;
+                if(Games[indexGame].playersNum() == 0){
+                    Games[indexGame].gameRest();
                 }
                 console.log('player ', data['user']['name'], ' is leaved')
-                //socket.server.emit('update game' , players)
             }else {
-                socket.server.to('PlotGame').emit('leave player re' ,{'data': data , 'players' : Games[0].players  } )
-                socket.leave('PlotGame');
                 console.log('cant leave player ' , data['user']['name'] , ' has index ', data['index'])
             }
+            socket.server.to(myGame.gameName).emit('leave player re' ,{'data': data , 'players' : Games[indexGame].players  } )
+            socket.leave(myGame.gameName);
         })
 
         socket.on('get players', (data )=>{
-                socket.server.to('PlotGame').emit('get players re' , { 'players':Games[0].players , 'buyersCard' : Games[0].buyersCard })
-                console.log('get players emit')
+            let indexGame = data['gameIndex'];
+            socket.server.sockets.in(myGame.gameName).emit('get players re' , { 'players':Games[indexGame].players , 'buyersCard' : Games[indexGame].buyersCard })
+            console.log('get players emit')
         })
 
         socket.on('start game', (data )=>{
-            if(playersNum() == 4){
-                sortCards();
-            }
-            socket.server.to('PlotGame').emit('start game re' , { 'playerKingdom':Games[0].playerKingdom , 'rolePlayer' : Games[0].rolePlayer })
-            console.log('game started....')
-        })
-        socket.on('rest game', (data )=>{
+            let indexGame = data['gameIndex'];
             
-            socket.server.to('PlotGame').emit('rest game re' , { 'playerKingdom':Games[0].playerKingdom , 'rolePlayer' : Games[0].rolePlayer })
+            if(Games[indexGame].playersNum() == 4){
+                Games[indexGame].distributingCards();
+                socket.server.to(myGame.gameName).emit('get players re' , { 'players':Games[indexGame].players , 'buyersCard' : Games[indexGame].buyersCard })
+                socket.server.to(myGame.gameName).emit('start game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
+                console.log('game started....')
+            }
+        })
+
+        socket.on('rest game', (data )=>{
+            let indexGame = data['gameIndex'];
+            Games[indexGame].gameRest();
+            socket.server.to(myGame.gameName).emit('rest game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
             console.log('rest game.')
         })
 
         socket.on('on buy', (data )=>{
-            Games[0].rolePlayer ++;
-            if(Games[0].rolePlayer>=4){
-                Games[0].playerKingdom++;
-                Games[0].rolePlayer =0;
-                if(Games[0].playerKingdom >=4){
-                    Games[0].playerKingdom = 0;
+            let indexGame = data['gameIndex'];
+            Games[indexGame].rolePlayer ++;
+            if(Games[indexGame].rolePlayer>=4){
+                Games[indexGame].playerKingdom++;
+                Games[indexGame].rolePlayer =0;
+                if(Games[indexGame].playerKingdom >=4){
+                    Games[indexGame].playerKingdom = 0;
                 }
             }
-        console.log('role :' , Games[0].rolePlayer);
-            socket.server.to('PlotGame').emit('start game re' , { 'playerKingdom':Games[0].playerKingdom , 'rolePlayer' : Games[0].rolePlayer })
-            //console.log('player name purchase : ' ,data['player']['name'] , ' purchase ' , data['player']['purchase'] , ' index : ' ,data['player']['index'] )
+        console.log('role : ' , Games[indexGame].rolePlayer);
+        socket.server.to(myGame.gameName).emit('start game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
         })
     
-
-
-
         socket.on('pass turn' , ()=>{
-            let current = Games[0].players.findIndex(palyer => player.active == true ),
-            next = (current + 1) % Games[0].players.length
+            let indexGame = data['gameIndex'];
+            //let current = Games[indexGame].players.findIndex(palyer => player.active == true ),
+            next = (current + 1) % Games[indexGame].players.length
 
-            if(current != -1 )Games[0].players[current].active = false
-            Games[0].players[next].active = true
-                socket.to('PlotGame').emit('update game' , Games[0].players)
+            if(current != -1 )Games[indexGame].players[current].active = false
+            Games[indexGame].players[next].active = true
+                socket.to(myGame.gameName).emit('update game' , Games[indexGame].players)
         })
 
     },

@@ -56,19 +56,22 @@ app.post('/login', async(req , res )=>{
   mongoose.connect("mongodb+srv://sawSy:9OP4J1pQp1It9Dh1@plotgameapp.sbbcz.mongodb.net/plot_api?retryWrites=true&w=majority")
   .then(result => {
         console.log("mongosedb is connection");
-
   }).catch(err => {
         console.log( "error in mongosedb connection : " ,err);
   });
+
   
   io.on('connection',(socket)=>{
+
     // var clients = io.sockets.clients();
+    game.handle(socket);
     console.log('Connected Successfully for ', socket.id);
     io.to(socket.id).emit('Connected-Successfully', '1');
     
-     socket.on('disconnect',()=>{
-         console.log('Desconnected' , socket.id , PORT);
+        socket.on('disconnect',()=>{
+        console.log('Desconnected' , socket.id , PORT);
      });
+
 
      socket.on('message', (data)=>{
          console.log('sended data from ' , data['sentById']);
@@ -101,16 +104,14 @@ app.post('/login', async(req , res )=>{
      var created = false;
 
      socket.on('create game', (data)=>{
-        if(created == false){
-            game.handle(socket);
-            created = true;
-            console.log('game rest by ' , data['user']['name'] , ' ', socket.id);
-        }else{
-            console.log('join to old game',game.players());
-        }
+        let nPlayer = Player.newPlayer(socket.id ,data['user']['id'] , data['user']['name'], data['user']['email'],  data['index'] );
+        game.createGame(socket,nPlayer);
+        console.log('create game by ' , data['user']['name'] );
+    });
 
-        socket.join('PlotGame');
-        io.to('PlotGame').emit('create-game-re');
+    socket.on('find game to join', (data)=>{
+        game.findEmptyGame(socket);
+        console.log('find game to join..... ');
     });
 
 
