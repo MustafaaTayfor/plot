@@ -83,8 +83,7 @@ toJSON(){
 
 
 playerIndex (p){
-    
-    return this.players.findIndex(palyer => { return palyer.id == p.id});
+    return this.players.findIndex(palyer => { return   ( palyer != null && palyer.id == p.id)});
 }
 
 playersNum (){
@@ -100,6 +99,8 @@ playersNum (){
 
 distributingCards(){
     shuffle(this.allCards);
+
+    this.gameStarted = true;
 
     if(this.buyersCard == null){
         this.buyersCard = this.allCards[0];          
@@ -228,9 +229,10 @@ module.exports = {
     },
 
     findEmptyGame:(socket)=>{
-       let emptyGameIndex = Games.findIndx(game => {return game.playersNum() <4});
+       let emptyGameIndex = Games.findIndex(game => {return game.playersNum() <4});
        if(emptyGameIndex != -1){
-           socket.emit('create-game-re',myGame[emptyGameIndex].toJSON());
+        socket.join(Games[emptyGameIndex].gameName);
+           socket.emit('create-game-re',Games[emptyGameIndex].toJSON());
        }
     },
 
@@ -239,6 +241,9 @@ module.exports = {
 
         socket.on('join player', (data )=>{
             let indexGame = data['gameIndex'];
+            if(indexGame == null)
+                return;
+            
             if(Games[indexGame].players[data['index']] == null || Games[indexGame].players[data['index']].email == data['user']['email']){
                 
                 let nPlayer = Player.newPlayer(socket.id ,data['user']['id'] , data['user']['name'], data['user']['email'],  data['index'] );
@@ -262,6 +267,9 @@ module.exports = {
 
         socket.on('leave player', (data )=>{
             let indexGame = data['gameIndex'];
+            if(indexGame == null)
+                return;
+
             if(data['index']<4  && Games[indexGame].players[data['index'] ] != null && Games[indexGame].players[data['index']].email == data['user']['email']){
                 Games[indexGame].players[data['index']] = null;
                 if(Games[indexGame].playersNum() == 0){
@@ -277,16 +285,19 @@ module.exports = {
 
         socket.on('get players', (data )=>{
             let indexGame = data['gameIndex'];
+            if(indexGame == null)
+                return;
             socket.server.sockets.in(myGame.gameName).emit('get players re' , { 'players':Games[indexGame].players , 'buyersCard' : Games[indexGame].buyersCard })
             console.log('get players emit')
         })
 
         socket.on('start game', (data )=>{
             let indexGame = data['gameIndex'];
-            
+            if(indexGame == null)
+                return;
             if(Games[indexGame].playersNum() == 4){
                 Games[indexGame].distributingCards();
-                socket.server.to(myGame.gameName).emit('get players re' , { 'players':Games[indexGame].players , 'buyersCard' : Games[indexGame].buyersCard })
+                socket.server.to(myGame.gameName).emit('create-game-re',Games[indexGame].toJSON());
                 socket.server.to(myGame.gameName).emit('start game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
                 console.log('game started....')
             }
@@ -294,6 +305,8 @@ module.exports = {
 
         socket.on('rest game', (data )=>{
             let indexGame = data['gameIndex'];
+            if(indexGame == null)
+                return;
             Games[indexGame].gameRest();
             socket.server.to(myGame.gameName).emit('rest game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
             console.log('rest game.')
@@ -301,6 +314,8 @@ module.exports = {
 
         socket.on('on buy', (data )=>{
             let indexGame = data['gameIndex'];
+            if(indexGame == null || data['rolePlayer'] != Games[indexGame].rolePlayer )
+                return;
             Games[indexGame].rolePlayer ++;
             if(Games[indexGame].rolePlayer>=4){
                 Games[indexGame].playerKingdom++;
@@ -310,11 +325,13 @@ module.exports = {
                 }
             }
         console.log('role : ' , Games[indexGame].rolePlayer);
-        socket.server.to(myGame.gameName).emit('start game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
+        socket.server.to(myGame.gameName).emit('start Role re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
         })
     
         socket.on('pass turn' , ()=>{
             let indexGame = data['gameIndex'];
+            if(indexGame == null)
+                return;
             //let current = Games[indexGame].players.findIndex(palyer => player.active == true ),
             next = (current + 1) % Games[indexGame].players.length
 
