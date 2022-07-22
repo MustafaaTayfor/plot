@@ -18,9 +18,10 @@ constructor (creatorPlayer){
     this.gameStarted = false;
     this.creatorPlayer = creatorPlayer;
     this.players = [creatorPlayer , null , null , null];
-    this.rolePlayer =1;
+    this.rolePlayer =0;
     this.playerKingdom =0;
-
+    this.showTypeGameDialog = false;
+    this.showStartDialog = true;
 
     this.gameName = 'plot' + this.creatorPlayer.userId + Date(Date.now()).toString();
     this.gameIndex;
@@ -77,6 +78,8 @@ toJSON(){
         'playerKingdom':this.playerKingdom,
         'gameName' : this.gameName,
         'gameIndex' :this.gameIndex,
+        'showTypeGameDialog': this.showTypeGameDialog,
+        'showStartDialog':this.showStartDialog,
     }
 
 }
@@ -187,6 +190,76 @@ gameRest() {
         console.log('game is rest');
 }
 
+getBuyers(index){
+
+    var purchaseIndex = null;
+
+    // اذا كان احد اللاعبين مختار صن
+
+    for(var i = 0 ; i< this.players.length ; i++){
+        if(this.players[i].purchase == type_game.san)
+            purchaseIndex = i;
+    }
+
+    if( purchaseIndex != null){
+        if(index == this.playerKingdom || index == (this.playerKingdom+3)%4 )
+        return [type_game.pass , type_game.ashkel , type_game.before ];
+        else
+        return [type_game.pass , type_game.before ];
+    }
+
+
+    // اذا كان احد اللاعبين مختار حكم
+
+    for( i = 0 ; i< this.players.length ; i++){
+        if(this.players[i].purchase == type_game.hakam)
+            purchaseIndex = i;
+    }
+
+    if( purchaseIndex != null){
+        if(index == this.playerKingdom || index == (this.playerKingdom+3)%4 )
+        return [type_game.pass , type_game.san ,type_game.ashkel];
+        else
+        return [type_game.pass , type_game.san , type_game.double];
+    }
+
+
+
+    //  7 - 8 - Q - K - 10 - A - 9 - J.  :حكم
+    //  7 - 8 - 9 - J - Q - K - 10 - A.   :صن
+    //  ذا كان اللاعب لم يشتري بعد
+    if(this.players[purchaseIndex]  == null){
+
+        if(index == this.playerKingdom || index == (this.playerKingdom+3)%4 )
+        return [type_game.pass , type_game.san ,type_game.hakam , type_game.ashkel];
+        else
+        return [type_game.pass , type_game.san ,type_game.hakam  ];
+
+    // اذا كان اللاعب مختار بس في الدورة الاولى ولم يختر احد صن او حكم ثاني
+    }else{
+
+        if(index == this.playerKingdom || index == (this.playerKingdom+3)%4 )
+        return [type_game.wla , type_game.san , type_game.hakam2 , type_game.ashkel];
+        else
+        return [type_game.wla , type_game.san ,  type_game.hakam2];
+
+    }
+    
+
+}
+
+
+passTurn(){
+    this.rolePlayer ++;
+    if(this.rolePlayer>=4){
+        this.playerKingdom++;
+        this.rolePlayer =0;
+        if(this.playerKingdom >=4){
+            this.playerKingdom = 0;
+        }
+    }
+console.log('role : ' , this.rolePlayer , ' for Game ' , this.gameName );
+}
 
 }
 
@@ -297,11 +370,18 @@ module.exports = {
                 return;
             if(Games[indexGame].playersNum() == 4){
                 Games[indexGame].distributingCards();
-                socket.server.to(myGame.gameName).emit('create-game-re',Games[indexGame].toJSON());
+                Games[indexGame].showStartDialog =false;
+                Games[indexGame].showTypeGameDialog=true;
+
+                
+                socket.emit('get buyers re',Games[indexGame].getBuyers(Games[indexGame].rolePlayer));
+                socket.emit('create-game-re',Games[indexGame].toJSON());
                 socket.server.to(myGame.gameName).emit('start game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
                 console.log('game started....')
             }
         })
+
+
 
         socket.on('rest game', (data )=>{
             let indexGame = data['gameIndex'];
@@ -316,28 +396,37 @@ module.exports = {
             let indexGame = data['gameIndex'];
             if(indexGame == null || data['rolePlayer'] != Games[indexGame].rolePlayer )
                 return;
-            Games[indexGame].rolePlayer ++;
-            if(Games[indexGame].rolePlayer>=4){
-                Games[indexGame].playerKingdom++;
-                Games[indexGame].rolePlayer =0;
-                if(Games[indexGame].playerKingdom >=4){
-                    Games[indexGame].playerKingdom = 0;
-                }
+
+            if( data['purchase'] == null && Games[indexGame].players[Games[indexGame].rolePlayer].purchase != null ){
+                Games[indexGame].players[data['rolePlayer']].purchase = type_game.wla;
+            }else if(data['purchase'] == null){
+                Games[indexGame].players[data['rolePlayer']].purchase = type_game.pass;
+            }else
+                Games[indexGame].players[data['rolePlayer']].purchase = data['purchase'];
+
+
+            console.log('player ', Games[data['gameIndex']].players[data['rolePlayer']].name , ' try buy ' , Games[indexGame].players[data['rolePlayer']].purchase );
+
+            if(date['purchase'] != type_game.san){
+                Games[indexGame].passTurn();
+                console.log('is ',date['purchase']);
+                socket.to(Games[indexGame].players[Games[indexGame].rolePlayer].id).emit('show choose dialog  re' , { 'listBuyers':Games[indexGame].getBuyers(Games[indexGame].rolePlayer) });
+                socket.server.to(Games[indexGame].gameName).emit('start Role re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
+            }else {
+                console.log('is ',type_game.san);
             }
-        console.log('role : ' , Games[indexGame].rolePlayer);
-        socket.server.to(myGame.gameName).emit('start Role re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
+        
         })
     
-        socket.on('pass turn' , ()=>{
+        socket.on('pass turn' , (data)=>{
             let indexGame = data['gameIndex'];
             if(indexGame == null)
                 return;
-            //let current = Games[indexGame].players.findIndex(palyer => player.active == true ),
-            next = (current + 1) % Games[indexGame].players.length
 
-            if(current != -1 )Games[indexGame].players[current].active = false
-            Games[indexGame].players[next].active = true
-                socket.to(myGame.gameName).emit('update game' , Games[indexGame].players)
+            Games[indexGame].passTurn();
+            socket.emit('get buyers re',Games[indexGame].getBuyers(Games[indexGame].rolePlayer));
+            socket.server.to(Games[indexGame].gameName).emit('start Role re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
+   
         })
 
     },

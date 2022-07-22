@@ -8,7 +8,8 @@ module.exports = {
             name : userName,
             cards:[],
             score : 0,
-            active : false
+            active : false,
+            purchase : null
         }
     }
 
