@@ -7,8 +7,6 @@ let Card = require('../models/cards');
  const type_card = { diamonds:"diamonds" , spades:"spades", hearts : "hearts" ,  clubs : "clubs"}
  const type_game = { san:"san" , pass :"pass" , hakam :"hakam" , ashkel :"ashkel" , wla:"wla" , hakam2 : "hakam2", double : "double" , before :"before" }
 
-
-
 class GamePlot{
     
 constructor (creatorPlayer){
@@ -16,8 +14,8 @@ constructor (creatorPlayer){
     this.buyersCard = null;
     this.buyerType = null;
     this.gameStarted = false;
-    this.creatorPlayer = creatorPlayer;
-    this.players = [creatorPlayer , null , null , null];
+    this.creatorPlayer = creatorPlayer;  
+    this.players = [creatorPlayer , Player.newPlayer("lklklk" ,"62cbed23459f54d04f2c8e84" , "مصطفى", "mustafa@hotmail.com", 1) , null , Player.newPlayer("555212ss" ,"62cee3c3db215cdfa8846d75" , "احمد", "ahmad@gmail.com" , 3 )];
     this.rolePlayer =0;
     this.playerKingdom =0;
     this.showTypeGameDialog = false;
@@ -191,13 +189,16 @@ gameRest() {
 }
 
 getBuyers(index){
-
+    
     var purchaseIndex = null;
 
     // اذا كان احد اللاعبين مختار صن
 
     for(var i = 0 ; i< this.players.length ; i++){
-        if(this.players[i].purchase == type_game.san)
+        if(this.players[i] == null){
+            return [];
+        }
+        if(this.players[i]!= null &&this.players[i].purchase == type_game.san)
             purchaseIndex = i;
     }
 
@@ -249,16 +250,17 @@ getBuyers(index){
 }
 
 
-passTurn(){
+ passTurn ()  {
     this.rolePlayer ++;
     if(this.rolePlayer>=4){
-        this.playerKingdom++;
-        this.rolePlayer =0;
-        if(this.playerKingdom >=4){
-            this.playerKingdom = 0;
-        }
+          this.playerKingdom++;
+          this.rolePlayer =0;
+          if(this.playerKingdom >=4){
+              this.playerKingdom = 0;
+          }
     }
-console.log('role : ' , this.rolePlayer , ' for Game ' , this.gameName );
+    console.log('role : ' , this.rolePlayer , ' for Game ' , this.gameName );
+    
 }
 
 }
@@ -288,6 +290,8 @@ function shuffle(array) {
 
 
 
+
+
 module.exports = {
 
     // PC  = Player Creator
@@ -311,6 +315,13 @@ module.exports = {
 
     
     handle: (socket)=>{
+        var tid;
+        var abortTimer = () => { // to be called when you want to stop the timer
+            clearTimeout(tid);
+        }
+
+
+        
 
         socket.on('join player', (data )=>{
             let indexGame = data['gameIndex'];
@@ -323,13 +334,13 @@ module.exports = {
                 
                 //اذا اللاعب موجود بالفعل داخل اللعبة اخبر اللاعب مكان جلوسه وامنعه من الدخول
                 if(Games[indexGame].playerIndex(nPlayer) != -1 && false){
-                    socket.server.to(myGame.gameName).emit('You are already in the game' ,{'data': data , 'playersIndex' :Games[indexGame].playerIndex(nPlayer)});
+                    socket.server.to(Games[indexGame].gameName).emit('You are already in the game' ,{'data': data , 'playersIndex' :Games[indexGame].playerIndex(nPlayer)});
                     console.log('You are already in the game ', Games[indexGame].gameName , ' your index is ' , Games[indexGame].playerIndex(nPlayer));
                     return;
                 }
                 
                 Games[indexGame].players[data['index']] = nPlayer;
-                socket.server.to(myGame.gameName).emit('join player re' ,{'data': data , 'players' : Games[indexGame].players  } )    
+                socket.server.to(Games[indexGame].gameName).emit('join player re' ,{'data': data , 'players' : Games[indexGame].players  } )    
                 console.log('player ', data['user']['name'] , ' is joined ', socket.id)
             }else{
                 socket.emit('game is full ' , data['user']['name'])
@@ -340,10 +351,13 @@ module.exports = {
 
         socket.on('leave player', (data )=>{
             let indexGame = data['gameIndex'];
+            if(Games.length == 0)
+                return
+            abortTimer();
             if(indexGame == null)
                 return;
 
-            if(data['index']<4  && Games[indexGame].players[data['index'] ] != null && Games[indexGame].players[data['index']].email == data['user']['email']){
+            if(data['index']<4 && Games[indexGame] != null && Games[indexGame].players[data['index'] ] != null && Games[indexGame].players[data['index']].email == data['user']['email']){
                 Games[indexGame].players[data['index']] = null;
                 if(Games[indexGame].playersNum() == 0){
                     Games[indexGame].gameRest();
@@ -352,15 +366,15 @@ module.exports = {
             }else {
                 console.log('cant leave player ' , data['user']['name'] , ' has index ', data['index'])
             }
-            socket.server.to(myGame.gameName).emit('leave player re' ,{'data': data , 'players' : Games[indexGame].players  } )
-            socket.leave(myGame.gameName);
+            socket.server.to(Games[indexGame].gameName).emit('leave player re' ,{'data': data , 'players' : Games[indexGame].players  } )
+            socket.leave(Games[indexGame].gameName);
         })
 
         socket.on('get players', (data )=>{
             let indexGame = data['gameIndex'];
             if(indexGame == null)
                 return;
-            socket.server.sockets.in(myGame.gameName).emit('get players re' , { 'players':Games[indexGame].players , 'buyersCard' : Games[indexGame].buyersCard })
+            socket.server.sockets.in(Games[indexGame].gameName).emit('get players re' , { 'players':Games[indexGame].players , 'buyersCard' : Games[indexGame].buyersCard })
             console.log('get players emit')
         })
 
@@ -368,17 +382,34 @@ module.exports = {
             let indexGame = data['gameIndex'];
             if(indexGame == null)
                 return;
+                
+
+            
+            
             if(Games[indexGame].playersNum() == 4){
                 Games[indexGame].distributingCards();
                 Games[indexGame].showStartDialog =false;
                 Games[indexGame].showTypeGameDialog=true;
 
-                
+            
                 socket.emit('get buyers re',Games[indexGame].getBuyers(Games[indexGame].rolePlayer));
                 socket.emit('create-game-re',Games[indexGame].toJSON());
-                socket.server.to(myGame.gameName).emit('start game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
+                socket.server.to(Games[indexGame].gameName).emit('start game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
+                socket.server.sockets.in(Games[indexGame].gameName).emit('get players re' , { 'players':Games[indexGame].players , 'buyersCard' : Games[indexGame].buyersCard })
                 console.log('game started....')
+                
+                var roleTurn = () => {
+                    Games[indexGame].passTurn();
+                    socket.emit('get buyers re', Games[indexGame].getBuyers(Games[indexGame].rolePlayer));
+                    socket.server.to(Games[indexGame].gameName).emit('start Role re', { 'playerKingdom': Games[indexGame].playerKingdom, 'rolePlayer': Games[indexGame].rolePlayer })
+        
+                    tid = setTimeout(roleTurn, 5000); // repeat myself
+                }
+
+                roleTurn();
             }
+
+
         })
 
 
@@ -388,7 +419,7 @@ module.exports = {
             if(indexGame == null)
                 return;
             Games[indexGame].gameRest();
-            socket.server.to(myGame.gameName).emit('rest game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
+            socket.server.to(Games[indexGame].gameName).emit('rest game re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
             console.log('rest game.')
         })
 
@@ -417,16 +448,15 @@ module.exports = {
             }
         
         })
-    
-        socket.on('pass turn' , (data)=>{
-            let indexGame = data['gameIndex'];
-            if(indexGame == null)
-                return;
 
-            Games[indexGame].passTurn();
-            socket.emit('get buyers re',Games[indexGame].getBuyers(Games[indexGame].rolePlayer));
-            socket.server.to(Games[indexGame].gameName).emit('start Role re' , { 'playerKingdom':Games[indexGame].playerKingdom , 'rolePlayer' : Games[indexGame].rolePlayer })
-   
+        
+    
+        socket.on('pass turn' , async(data)=>{
+            let indexGame = data['gameIndex'];
+            if(indexGame == null || data['rolePlayer'] != Games[indexGame].rolePlayer )
+                return;
+            
+        
         })
 
     },

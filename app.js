@@ -53,7 +53,7 @@ app.post('/login', async(req , res )=>{
 
 
 
-  mongoose.connect("mongodb+srv://sawSy:9OP4J1pQp1It9Dh1@plotgameapp.sbbcz.mongodb.net/plot_api?retryWrites=true&w=majority")
+  mongoose.connect("mongodb+srv://saw_sy:DbMRfRJn4C9O0gNX@cluster0.1lcdj7a.mongodb.net/all-data?retryWrites=true&w=majority")
   .then(result => {
         console.log("mongosedb is connection");
   }).catch(err => {
