@@ -49,11 +49,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
         // إرسال البيانات إلى السيرفر الثاني
         axios.post('https://karam-app.com/chat_app/public/api/add-chat', data).then(response => {
+
             io.to(user_online.get(data['user2_id'])).emit('message-receive', response.data);
-            io.to(user_online.get(data['id'])).emit('message-receive', response.data);
-            console.log(response.data);
-            //io.to(user_online.get(data['user2_id'])).emit('message-receive', response.data);
-            //console.log(response.data);
+            io.to(user_online.get(data['user_id'])).emit('message-receive', response.data);
+
+            console.log(user_online);
+            console.log(response.data ,user_online.get(data['user2_id']),user_online.get(data['user_id']) ,data['user2_id']);
         }).catch(error => {
 
             console.log(error.message);
