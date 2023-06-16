@@ -41,7 +41,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
                 user_online.delete(key);
             }
         });
-       // console.log('Desconnected' , socket.id , PORT);
+       console.log('Desconnected' , socket.id , PORT);
     });
 
 
@@ -49,7 +49,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
         // إرسال البيانات إلى السيرفر الثاني
         axios.post('https://karam-app.com/chat_app/public/api/add-chat', data).then(response => {
-           
+            io.to(user_online.get(data['user2_id'])).emit('message-receive', response.data);
+            io.to(user_online.get(data['id'])).emit('message-receive', response.data);
+            console.log(response.data);
             //io.to(user_online.get(data['user2_id'])).emit('message-receive', response.data);
             //console.log(response.data);
         }).catch(error => {
@@ -57,14 +59,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
             console.log(error.message);
         });
 
-        axios.post('https://karam-app.com/chat_app/public/api/chat', data).then(response => {
-           
-        io.to(user_online.get(data['user2_id'])).emit('message-receive', response.data);
-        console.log(response.data);
-        }).catch(error => {
-
-            console.log(error.message);
-        });
+        
          
      });
 
