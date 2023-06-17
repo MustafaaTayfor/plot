@@ -64,6 +64,48 @@ app.use(bodyParser.urlencoded({ extended: false }));
          
      });
 
+     socket.on('message-group', (data)=>{
+
+        // إرسال البيانات إلى السيرفر الثاني
+        axios.post('https://karam-app.com/chat_app/public/api/add-chat-group', data).then(response => {
+
+            io.to(user_online.get(data['user2_id'])).emit('message-group-receive', response.data);
+            io.to(user_online.get(data['user_id'])).emit('message-group-receive', response.data);
+
+            console.log(response.data ,user_online.get(data['user2_id']),user_online.get(data['user_id']) ,data['user2_id']);
+        }).catch(error => {
+
+            console.log(error.message);
+        });
+
+        
+     });
+
+     socket.on('join-group', (data)=>{
+
+        // إرسال البيانات إلى السيرفر الثاني
+        axios.post('https://karam-app.com/chat_app/public/api/add-user-group', data).then(response => {
+
+         // إرسال اشعار عند انضمام عضو جديد
+        axios.post('https://karam-app.com/chat_app/public/api/add-user-group', data).then(response1 => {
+
+            response1.data.forEach(function(user) {
+               io.to(user_online.get(user.id.toString())).emit('join-group-receive', response.data);
+                console.log(user.id);
+            });
+        }).catch(error => {
+
+            console.log(error.message);
+        });
+
+        }).catch(error => {
+
+            console.log(error.message);
+        });
+
+        
+     });
+
 
      socket.on('public-message', async(data)=>{
         console.log('sended data from ' , data['from'] , ' ' ,data['text'] );
